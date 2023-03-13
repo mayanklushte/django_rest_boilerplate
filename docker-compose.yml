@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  database:
+    container_name: database
+    image: mysql:8.0.23
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: boilerplate
+      MYSQL_USER: boilerplate
+      MYSQL_PASSWORD: password
+    command: --bind-address=0.0.0.0
+    ports:
+      - "3306:3306"
+    restart: always
+
+  backend:
+    image: backend
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    env_file: .env.dev
+    depends_on:
+      - database
+    ports:
+      - "8000:8000"
+    restart: always
+
