@@ -17,7 +17,7 @@ class EmailService:
             send_mail(
                 subject=subject,
                 message="",
-                from_email="Boilerplate <lushtemayank21@gmail.com>",
+                from_email="Boilerplate <demo@gmail.com>",
                 recipient_list=[email],
                 html_message=html_message,
                 fail_silently=False,

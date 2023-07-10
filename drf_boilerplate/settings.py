@@ -9,12 +9,10 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-
+import datetime
 import os
 from pathlib import Path
-from dotenv import load_dotenv
-
-load_dotenv()
+from decouple import Csv, config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,20 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "secret_key")
+SECRET_KEY = config("SECRET_KEY")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-]
-
+# cors setting
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_PREFLIGHT_MAX_AGE = 3000
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,17 +43,43 @@ INSTALLED_APPS = [
 
     # Third Party
     "rest_framework",
+    "corsheaders",
     "phonenumber_field",
     "rest_framework_simplejwt",
     "rest_framework.authtoken",
-
 
     # User Defined
     "jwt_auth",
     "email_service",
 ]
 
+REST_FRAMEWORK = {
+    'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
+    "DEFAULT_RENDERER_CLASS": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        # 'rest_framework.authentication.TokenAuthentication',
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # 'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
+    ],
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "PAGE_SIZE": 20,
+
+}
+
+JWT_AUTH = {
+    # give the token expiration time to 30 days...
+    "JWT_EXPIRATION_DELTA": datetime.timedelta(days=30),
+    "JWT_ALLOW_REFRESH": True,
+    "JWT_AUTH_HEADER_PREFIX": "Token",
+    "JWT_RESPONSE_PAYLOAD_HANDLER": "api.account.jwt_handlers.jwt_create_response_payload",
+}
+
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -95,11 +117,11 @@ WSGI_APPLICATION = 'drf_boilerplate.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "HOST": os.environ["DATABASE_HOST"],
-        "NAME": os.environ["DATABASE_NAME"],
-        "USER": os.environ["DATABASE_USER"],
-        "PASSWORD": os.environ["DATABASE_PASSWORD"],
-        "PORT": int(os.environ["DATABASE_PORT_INT"]),
+        "HOST": config("DATABASE_HOST"),
+        "NAME": config("DATABASE_NAME"),
+        "USER": config("DATABASE_USER"),
+        "PASSWORD": config("DATABASE_PASSWORD"),
+        "PORT": config("DATABASE_PORT_INT", cast=int),
         "OPTIONS": {
             "connect_timeout": 3,
         },
@@ -137,17 +159,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = "jwt_auth.UserProfile"
 
-REST_FRAMEWORK = {
-    'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
-    "DEFAULT_RENDERER_CLASSES": (
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",
-    ),
-}
 
 
 # Internationalization
@@ -173,12 +184,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-EMAIL_HOST = os.environ["EMAIL_HOST"]
-EMAIL_PORT = os.environ["EMAIL_PORT"]
-EMAIL_HOST_USER = os.environ["EMAIL_HOST_USER"]
-EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
-EMAIL_USE_TLS = os.environ["EMAIL_USE_TLS"]
-DEFAULT_FROM_EMAIL = os.environ["DEFAULT_FROM_EMAIL"]
+EMAIL_HOST = config("EMAIL_HOST")
+EMAIL_PORT = config("EMAIL_PORT")
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool)
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
 
 EMAIL_SERVICE = {
     "OPTIONS": {},
@@ -188,9 +199,9 @@ EMAIL_SERVICE = {
     "VERIFY_SECURITY_CODE_ONLY_ONCE": True,
 }
 
-FRONT_END_BASE = os.getenv("FRONT_END_BASE")
-FRONT_END_RESET_PASSWORD_PATH = os.getenv("FRONT_END_RESET_PASSWORD_PATH")
-FRONT_END_EMAIL_VERIFICATION_PATH = os.getenv("FRONT_END_EMAIL_VERIFICATION_PATH")
+FRONT_END_BASE = config("FRONT_END_BASE")
+FRONT_END_RESET_PASSWORD_PATH = config("FRONT_END_RESET_PASSWORD_PATH")
+FRONT_END_EMAIL_VERIFICATION_PATH = config("FRONT_END_EMAIL_VERIFICATION_PATH")
 
 MEDIA_DIR = BASE_DIR / 'media'
 MEDIA_ROOT = MEDIA_DIR
