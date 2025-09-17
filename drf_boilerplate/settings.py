@@ -66,8 +66,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
-    "PAGE_SIZE": 20,
-
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 JWT_AUTH = {
@@ -116,7 +116,7 @@ WSGI_APPLICATION = 'drf_boilerplate.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "django.db.backends.postgresql",
         "HOST": config("DATABASE_HOST"),
         "NAME": config("DATABASE_NAME"),
         "USER": config("DATABASE_USER"),
